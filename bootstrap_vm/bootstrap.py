@@ -83,7 +83,10 @@ def bootstrap(vm, just_run, no_install):
             'StrictHostKeyChecking=no',
             f'ubuntu@{ip}',
             '--',
-            "(test -e /usr/bin/python && echo 'python is installed') || (sudo DEBIAN_FRONTEND=noninteractive apt-get -qy update && sudo DEBIAN_FRONTEND=noninteractivex apt-get install -qy qemu-guest-agent python python-apt python-simplejson)"
+            "(test -e /usr/bin/python && echo 'python is installed') || "
+            "(sudo DEBIAN_FRONTEND=noninteractive apt-get -qy update &&"
+            " sudo DEBIAN_FRONTEND=noninteractivex "
+            "apt-get install -qy qemu-guest-agent python python-apt python-simplejson)"
         ]
         while returncode != 0:
             out = subprocess.run(command, stdin=sys.stdin, stderr=subprocess.PIPE)
@@ -97,15 +100,12 @@ def bootstrap(vm, just_run, no_install):
                 break
             time.sleep(1)
 
-    print("You can run the following command (on your local machine, only needed once) to configure ssh with easy access to all VMs:")
+    print("You can run the following command (on your local machine, only needed once) "
+          "to configure ssh with easy access to all VMs:")
     print()
     print(f'echo -e "Host *.fredvm\\n\\tProxyCommand ssh fred.thalia.nu nc %h %p" >> ~/.ssh/config')
     print()
     print("You have access to the (sudo enabled) user `ubuntu` by default")
-    # TODO: generate copypastable ansible command when we have testing playbooks/environments
-    # print("If you have configured ssh, you can run some ansible roles using this command (you can press enter when prompted for a password):")
-    # print()
-    # print(f'ansible-playbook -u ubuntu -i "{name}," --extra-vars="@environments/defaults.yml" -t common,ssh,users production.yml')
 
 
 def bootstrap_vm():
@@ -115,10 +115,12 @@ def bootstrap_vm():
     parser.add_argument('-r', '--run', action='store_true', help="start an existing disk")
     parser.add_argument('-b', '--bridge', help="use this bridge for networking")
     parser.add_argument('--virtualivo', action='store_true', help="this VM should be setup as virtualivo")
-    parser.add_argument('-k', '--key', action='append', help="add this public key to the authorized_keys on the created VM")
+    parser.add_argument('-k', '--key', action='append',
+                        help="add this public key to the authorized_keys on the created VM")
     parser.add_argument('--host-keys', help="directory where ssh host-keys can be found for the created VM")
     parser.add_argument('--no-clean', action='store_true', help="do not clean up files and vms when an error occurs")
-    parser.add_argument('--no-install', action='store_true', help="do not install packages (with apt) necessary to run ansible")
+    parser.add_argument('--no-install', action='store_true',
+                        help="do not install packages (with apt) necessary to run ansible")
     parser.add_argument('name', help="the name for the virtual machine")
 
     args = vars(parser.parse_args())
