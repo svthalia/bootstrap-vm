@@ -19,13 +19,15 @@ import os
 import re
 
 
-# Adapted from ansible sources: https://github.com/ansible/ansible/blob/30227ace9818655f1ef8306c459664d0f160fee2/lib/ansible/modules/files/lineinfile.py
+# Adapted from ansible sources:
+# https://github.com/ansible/ansible/blob/30227ace9818655f1ef8306c459664d0f160fee2/lib/ansible/modules/files/lineinfile.py
 def write_changes(b_lines, dest):
     with open(dest, 'wb') as f:
         f.writelines(b_lines)
 
 
-# Adapted from ansible sources: https://github.com/ansible/ansible/blob/30227ace9818655f1ef8306c459664d0f160fee2/lib/ansible/modules/files/lineinfile.py
+# Adapted from ansible sources:
+# https://github.com/ansible/ansible/blob/30227ace9818655f1ef8306c459664d0f160fee2/lib/ansible/modules/files/lineinfile.py
 def present(dest, regexp, line):
     b_dest = bytes(dest, encoding='utf-8')
 
@@ -74,7 +76,8 @@ def present(dest, regexp, line):
         write_changes(b_lines, dest)
 
 
-# Adapted from ansible sources: https://github.com/ansible/ansible/blob/30227ace9818655f1ef8306c459664d0f160fee2/lib/ansible/modules/files/lineinfile.py
+# Adapted from ansible sources:
+# https://github.com/ansible/ansible/blob/30227ace9818655f1ef8306c459664d0f160fee2/lib/ansible/modules/files/lineinfile.py
 def absent(dest, regexp, line=''):
     b_dest = bytes(dest, encoding='utf-8')
 

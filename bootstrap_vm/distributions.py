@@ -88,7 +88,9 @@ class Ubuntu(Distribution):
             raise NotImplementedError(f"variant {self._variant} is not supported")
 
     def verify(self, image_location):
-        with tempfile.NamedTemporaryFile() as hashes, tempfile.NamedTemporaryFile() as signature, tempfile.NamedTemporaryFile() as image_hash:
+        with tempfile.NamedTemporaryFile() as hashes, \
+                tempfile.NamedTemporaryFile() as signature, \
+                tempfile.NamedTemporaryFile() as image_hash:
             subprocess.run(['wget', '--inet4-only', '-O', hashes.name, self.urls[self._variant]['hashes']])
             subprocess.run(['wget', '--inet4-only', '-O', signature.name, self.urls[self._variant]['signature']])
 

@@ -13,6 +13,7 @@ remove-vm = "bootstrap_vm:main"
 python = "^3.6"
 
 [tool.poetry.dev-dependencies]
+flake8 = "^3.7"
 
 [build-system]
 requires = ["poetry>=0.12"]
