@@ -1,5 +1,5 @@
 #  bootstrap-vm - Bootstrap a VM using libvirt tools
-#  Copyright (C) 2019 Jelle Besseling
+#  Copyright (C) 2019 Jelle Besseling <jelle@pingiun.com>
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -14,11 +14,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import os
-
-LIBVIRT_PATH = '/var/lib/libvirt/'
-IMAGES_PATH = os.path.join(LIBVIRT_PATH, 'images')
-ISO_PATH = os.path.join(LIBVIRT_PATH, 'iso')
+APP_NAME = 'bootstrap-vm'
 ONE_DAY = 60 * 60 * 24
 
 VM_XML = """
@@ -101,25 +97,3 @@ STATIC_INTERFACE = """
     <source bridge="{bridge}"/>
     <model type="virtio"/>
 </interface>"""
-
-NETPLAN_VIRTUALIVO = """
-version: 2
-ethernets:
-  ens2:
-    match:
-      macaddress: "{macaddress}"
-    dhcp4: no
-    dhcp6: no
-    accept-ra: no
-    gateway4: 131.174.41.1
-    gateway6: 2001:610:1418:1106::1
-    addresses:
-      - 131.174.41.19/25
-      - 2001:610:1418:1106:131:174:41:19/64
-    nameservers:
-      addresses:
-        - "131.174.30.40" # resolver.science.ru.nl
-        - "131.174.16.131" # resolvbck.science.ru.nl
-      search:
-        - "science.ru.nl"
-"""

@@ -1,5 +1,5 @@
 #  bootstrap-vm - Bootstrap a VM using libvirt tools
-#  Copyright (C) 2019 Jelle Besseling
+#  Copyright (C) 2019 Jelle Besseling <jelle@pingiun.com>
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -16,16 +16,18 @@
 
 import argparse
 import os
+import socket
 import subprocess
 import sys
 import tempfile
 import time
 from shutil import copyfile
 
-from bootstrap_vm.distributions import DISTRIBUTIONS
+from bootstrap_vm.distributions import Ubuntu
 from bootstrap_vm.file_utils import present
 from bootstrap_vm.remove import remove
 from bootstrap_vm.virtual_machine import VirtualMachine
+from bootstrap_vm.config import Config, default_config_file
 
 
 def get_ip(name):
@@ -41,12 +43,12 @@ def get_ip(name):
     return False
 
 
-def bootstrap(vm, just_run, no_install):
-    if not just_run:
+def bootstrap(vm, args):
+    if not args['run']:
         vm.distribution.download(vm.image_location)
         vm.distribution.verify(vm.image_location)
 
-    if not just_run:
+    if not args['run']:
         copyfile(vm.image_location, vm.disk_location)
 
     vm.generate_iso()
@@ -59,23 +61,24 @@ def bootstrap(vm, just_run, no_install):
 
     print("Waiting for IP address")
     ip = False
-    if vm.virtualivo:
-        ip = "131.174.41.19"
-        hostname = 'virtualivo.thalia.nu'
-    else:
-        hostname = f'{vm.name}.fredvm'
+    if args['ip']:
+        ip = args['ip']
+
+    hostname = f'{vm.name}.{config.domain}'
+    if args['hostname']:
+        hostname = args['hostname']
 
     while not ip:
         ip = get_ip(vm.name)
         time.sleep(1)
 
     print(f"The address for {hostname} is {ip}")
-    if not vm.virtualivo:
+    if not args['hostname']:
         print(f"Putting {hostname} in /etc/hosts")
         present('/etc/hosts', hostname + '$', f'{ip} {hostname}')
 
-    if not no_install:
-        print("Installing ansible requirements on the virtual machine")
+    if not args['no_install']:
+        print("Installing initial packages on the virtual machine")
         returncode = 1
         command = [
             'ssh',
@@ -83,16 +86,15 @@ def bootstrap(vm, just_run, no_install):
             'StrictHostKeyChecking=no',
             f'ubuntu@{ip}',
             '--',
-            "(test -e /usr/bin/python && echo 'python is installed') || "
-            "(sudo DEBIAN_FRONTEND=noninteractive apt-get -qy update &&"
+            "sudo DEBIAN_FRONTEND=noninteractive apt-get -qy update &&"
             " sudo DEBIAN_FRONTEND=noninteractivex "
-            "apt-get install -qy qemu-guest-agent python python-apt python-simplejson)"
+            f"apt-get install -qy {' '.join(config.initial_packages)}"
         ]
         while returncode != 0:
             out = subprocess.run(command, stdin=sys.stdin, stderr=subprocess.PIPE)
             returncode = out.returncode
             if returncode != 0 and b'Connection refused' not in out.stderr and b'No route to host' not in out.stderr:
-                print("Installing requirements failed, error:", out.stderr)
+                print("Installing packages failed, error:", out.stderr)
                 print("Maybe you can run the command manually:")
                 print()
                 print('sudo ' + ' '.join(f'"{sub}"' if ' ' in sub else sub for sub in command))
@@ -103,21 +105,26 @@ def bootstrap(vm, just_run, no_install):
     print("You can run the following command (on your local machine, only needed once) "
           "to configure ssh with easy access to all VMs:")
     print()
-    print(f'echo -e "Host *.fredvm\\n\\tProxyCommand ssh fred.thalia.nu nc %h %p" >> ~/.ssh/config')
+    print(f'echo -e "Host *.{config.domain}\\n\\tProxyCommand ssh {socket.getfqdn()} nc %h %p" >> ~/.ssh/config')
     print()
     print("You have access to the (sudo enabled) user `ubuntu` by default")
 
 
 def bootstrap_vm():
     parser = argparse.ArgumentParser(description="Bootstrap a VM using virt-install and ansible")
-    parser.add_argument('-d', '--distribution', default='ubuntu', help="the linux distribution to use")
     parser.add_argument('--variant', help="the distribution variant to use")
     parser.add_argument('-r', '--run', action='store_true', help="start an existing disk")
-    parser.add_argument('-b', '--bridge', help="use this bridge for networking")
-    parser.add_argument('--virtualivo', action='store_true', help="this VM should be setup as virtualivo")
+    parser.add_argument('-c', '--config', help="config file to use")
+    parser.add_argument('--static', help="use this config key from your static_configs")
+    parser.add_argument('--bridge', help="bridge to use for static network")
+    parser.add_argument('--ip', help="ip to use for static network")
+    parser.add_argument('--hostname', help="hostname to use for static network")
+    parser.add_argument('--netplan', help="netplan config to use")
+    parser.add_argument('--vcpu', type=int, help="amount of VCPUs")
+    parser.add_argument('--memory', type=int, help="amount of memory")
+    parser.add_argument('--host-keys', help="directory where ssh host-keys can be found for the created VM")
     parser.add_argument('-k', '--key', action='append',
                         help="add this public key to the authorized_keys on the created VM")
-    parser.add_argument('--host-keys', help="directory where ssh host-keys can be found for the created VM")
     parser.add_argument('--no-clean', action='store_true', help="do not clean up files and vms when an error occurs")
     parser.add_argument('--no-install', action='store_true',
                         help="do not install packages (with apt) necessary to run ansible")
@@ -125,35 +132,46 @@ def bootstrap_vm():
 
     args = vars(parser.parse_args())
 
+    if args['config']:
+        global config
+        config = Config(args['config'])
+    else:
+        config = Config(default_config_file())
+
     name = args['name']
-    distribution = args['distribution']
     variant = args['variant']
 
-    if args['virtualivo'] and not args['bridge']:
-        args['bridge'] = 'virtualivo-eno2'
-
-    if distribution not in DISTRIBUTIONS:
-        print(f"Unknown distribution {distribution}", file=sys.stderr)
-        sys.exit(1)
-
     try:
-        args['distribution'] = DISTRIBUTIONS[distribution](variant)
+        args['distribution'] = Ubuntu(variant)
     except RuntimeError as e:
         print(e, file=sys.stderr)
         sys.exit(1)
 
-    vm = VirtualMachine(**args)
+    static = args['static']
+    if static:
+        args['bridge'] = args['bridge'] or config.static[static].get('bridge')
+        args['ip'] = args['ip'] or config.static[static].get('ip')
+        args['hostname'] = args['hostname'] or config.static[static].get('hostname') or None
+        args['netplan'] = args['netplan'] or config.static[static].get('netplan') or config.netplan or None
+        args['vcpu'] = args['vcpu'] or config.static[static].get('vcpu') or config.vcpu
+        args['memory'] = args['memory'] or config.static[static].get('memory') or config.memory
+        args['host_keys'] = args['host_keys'] or config.static[static].get('host_keys') or config.host_keys or None
+        args['public_keys'] = {*(config.static[static].get('public_keys') or []), *(config.public_keys or []),
+                               *(args['key'] or [])}
+
+    del args['config']
+    vm = VirtualMachine(config=config, **args)
 
     if os.path.isfile(vm.disk_location) and not args['run']:
         print(f"The virtual machine {name} already exists", file=sys.stderr)
         sys.exit(1)
 
     try:
-        bootstrap(vm, args['run'], args['no_install'])
+        bootstrap(vm, args)
     except (Exception, KeyboardInterrupt) as e:
         if args['no_clean']:
             print("An error or interrupt occured but no-clean was specified")
             raise e
-        remove(name, confirm=False)
+        remove(name, config, confirm=False)
         if not isinstance(e, KeyboardInterrupt):
             raise e

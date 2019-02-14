@@ -1,5 +1,5 @@
 #  bootstrap-vm - Bootstrap a VM using libvirt tools
-#  Copyright (C) 2018 Jelle Besseling
+#  Copyright (C) 2019 Jelle Besseling <jelle@pingiun.com>
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by

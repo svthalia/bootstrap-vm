@@ -1,5 +1,5 @@
 #  bootstrap-vm - Bootstrap a VM using libvirt tools
-#  Copyright (C) 2019 Jelle Besseling
+#  Copyright (C) 2019 Jelle Besseling <jelle@pingiun.com>
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -22,27 +22,7 @@ import time
 from bootstrap_vm.constants import ONE_DAY
 
 
-class Distribution:
-    def download(self, image_location: str):
-        raise NotImplementedError("method from interface not implemented")
-
-    def verify(self, image_location: str):
-        raise NotImplementedError("method from interface not implemented")
-
-    @property
-    def distribution(self):
-        raise NotImplementedError("method from interface not implemented")
-
-    @property
-    def variant(self):
-        raise NotImplementedError("method from interface not implemented")
-
-    @property
-    def urls(self):
-        raise NotImplementedError("method from interface not implemented")
-
-
-class Ubuntu(Distribution):
+class Ubuntu:
     @property
     def distribution(self):
         return 'Ubuntu'
@@ -108,8 +88,3 @@ class Ubuntu(Distribution):
                     break
             image_hash.file.close()
             subprocess.run(['sha256sum', '--check', image_hash.name], cwd=folder, check=True)
-
-
-DISTRIBUTIONS = {
-    'ubuntu': Ubuntu,
-}
