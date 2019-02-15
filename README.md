@@ -11,7 +11,7 @@ any other server configurations.
 For reference, we are using this configuration:
 
 - Ubuntu 18.04 with KVM virtualization
-- A guest, virtualivo, which would be running on a bridge (hardcoded for now)
+- A guest, virtualivo, which would be running on a bridge, but this is configurable
 - Other guests which are NATed by libvirt
 - All guests are running Ubuntu
 - We manage configuration with ansible
