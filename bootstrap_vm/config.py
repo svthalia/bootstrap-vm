@@ -42,6 +42,9 @@ class Config:
     def __getattr__(self, item):
         return self._content[item]
 
+    def get(self, *args, **kwargs):
+        return self._content.get(*args, **kwargs)
+
 
 # Adapted from poetry:
 # https://github.com/sdispater/poetry/blob/2f2cec03b6b14e882522f7f6042ecdafebda2ca5/poetry/utils/appdirs.py
