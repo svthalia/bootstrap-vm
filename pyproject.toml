@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bootstrap_vm"
-version = "0.1.0"
+version = "0.2.0"
 description = "Bootstrap a VM using libvirt tools"
 authors = ["Jelle Besseling <jelle@pingiun.com>"]
 license = "GPL-3.0-or-later"
@@ -11,6 +11,7 @@ remove-vm = "bootstrap_vm:main"
 
 [tool.poetry.dependencies]
 python = "^3.6"
+pyyaml = "^3.13"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.7"

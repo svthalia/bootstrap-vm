@@ -1,5 +1,5 @@
 #  bootstrap-vm - Bootstrap a VM using libvirt tools
-#  Copyright (C) 2019 Jelle Besseling
+#  Copyright (C) 2019 Jelle Besseling <jelle@pingiun.com>
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -18,33 +18,30 @@ import os
 import subprocess
 import uuid
 
-from bootstrap_vm.constants import NETPLAN_VIRTUALIVO, STATIC_INTERFACE, DHCP_INTERFACE, VM_XML, ISO_PATH, IMAGES_PATH
-from bootstrap_vm.distributions import Distribution
+from bootstrap_vm.config import Config
+from bootstrap_vm.constants import STATIC_INTERFACE, DHCP_INTERFACE, VM_XML
 
 
 class VirtualMachine:
-    def __init__(self, name: str, distribution: Distribution, **kwargs: dict):
+    def __init__(self, name: str, distribution, config: Config, **kwargs: dict):
         self.name = name
         self.distribution = distribution
         self.macaddress = '52:54:00:' + ':'.join('{:02x}'.format(byte) for byte in os.urandom(3))
-        self.vcpu = kwargs.get('vcpu', 1)
-        self.memory = kwargs.get('memory', 1048576)  # argument takes KiBs, this is 1 GiB
-        self.bridge = kwargs['bridge']
-        self.virtualivo = kwargs['virtualivo']
-        self.keys = kwargs['key']
-        self.host_keys: str = kwargs['host_keys']
+        self.config = config
+        self.args = kwargs
 
     @property
     def image_location(self):
-        return os.path.join(IMAGES_PATH, f'{self.distribution.distribution}-{self.distribution.variant}.img')
+        return os.path.join(self.config.images_path,
+                            f'{self.distribution.distribution}-{self.distribution.variant}.img')
 
     @property
     def disk_location(self):
-        return os.path.join(IMAGES_PATH, f'{self.name}.img')
+        return os.path.join(self.config.images_path, f'{self.name}.img')
 
     @property
     def iso_location(self):
-        return os.path.join(ISO_PATH, f'{self.name}.iso')
+        return os.path.join(self.config.iso_path, f'{self.name}.iso')
 
     @staticmethod
     def write_ssh_key(f, host_keys, keytype):
@@ -67,9 +64,9 @@ class VirtualMachine:
         # cloud-init from the ubuntu cloud image uses a cdrom with metadata information
         # we use this to set up the authorized keys using the authorized keys from the home
         # directory, and the public key from the root user
-        os.makedirs(ISO_PATH, mode=0o0711, exist_ok=True)
+        os.makedirs(self.config.iso_path, mode=0o0711, exist_ok=True)
         iso_files = list()
-        metadata_location = os.path.join(ISO_PATH, 'meta-data')
+        metadata_location = os.path.join(self.config.iso_path, 'meta-data')
         iso_files.append(metadata_location)
         with open(metadata_location, 'w') as f:
             f.write(f"local-hostname: {self.name}\n")
@@ -83,27 +80,28 @@ class VirtualMachine:
             if os.path.isfile(root_key):
                 with open(root_key) as key:
                     f.write("  - " + key.read().strip() + '\n')
-            if self.keys:
-                for key in self.keys:
+            if self.args['public_keys']:
+                for key in self.args['public_keys']:
                     for line in key.split('\n'):
                         if line.strip() != '':
                             f.write("  - " + line.strip() + '\n')
 
         # This file only needs to be touched
-        userdata_location = os.path.join(ISO_PATH, 'user-data')
+        userdata_location = os.path.join(self.config.iso_path, 'user-data')
         iso_files.append(userdata_location)
         with open(userdata_location, 'w') as f:
-            if self.host_keys:
+            if self.args['host_keys']:
+                print(f"Placing host-keys from {self.args['host_keys']}")
                 f.write('#cloud-config\n\n')
                 f.write('ssh_keys:\n')
                 for keytype in ['ed25519', 'rsa', 'ecdsa']:
-                    self.write_ssh_key(f, self.host_keys, keytype)
+                    self.write_ssh_key(f, self.args['host_keys'], keytype)
 
-        if self.virtualivo:
-            network_config_location = os.path.join(ISO_PATH, 'network-config')
+        if self.args['netplan']:
+            network_config_location = os.path.join(self.config.iso_path, 'network-config')
             iso_files.append(network_config_location)
-            with open(network_config_location, 'w') as f:
-                f.write(NETPLAN_VIRTUALIVO.format(macaddress=self.macaddress))
+            with open(network_config_location, 'w') as f, open(self.args['netplan']) as netplan:
+                f.write(netplan.read().format(macaddress=self.macaddress))
 
         subprocess.run([
             'genisoimage',
@@ -115,14 +113,14 @@ class VirtualMachine:
 
     def generate_xml(self, filename: str):
         vm_uuid = str(uuid.uuid4())
-        if self.bridge:
-            interface = STATIC_INTERFACE.format(bridge=self.bridge, macaddress=self.macaddress)
+        if self.args['bridge']:
+            interface = STATIC_INTERFACE.format(bridge=self.args['bridge'], macaddress=self.macaddress)
         else:
             interface = DHCP_INTERFACE.format(macaddress=self.macaddress)
         vm_def = VM_XML.format(name=self.name,
                                uuid=vm_uuid,
-                               memory=self.memory,
-                               vcpu=self.vcpu,
+                               memory=self.args['memory'],
+                               vcpu=self.args['vcpu'],
                                disk_location=self.disk_location,
                                iso_location=self.iso_location,
                                osid=self.distribution.urls[self.distribution.variant]['libosinfo_id'],

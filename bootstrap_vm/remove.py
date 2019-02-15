@@ -1,5 +1,5 @@
 #  bootstrap-vm - Bootstrap a VM using libvirt tools
-#  Copyright (C) 2019 Jelle Besseling
+#  Copyright (C) 2019 Jelle Besseling <jelle@pingiun.com>
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -18,16 +18,16 @@ import argparse
 import os
 import subprocess
 
-from bootstrap_vm.constants import IMAGES_PATH, ISO_PATH
+from bootstrap_vm.config import Config, default_config_file
 from bootstrap_vm.file_utils import absent
 
 
-def remove(name, confirm=True):
+def remove(name, config, confirm=True):
     commands = [
         ['virsh', 'destroy', name],
         ['virsh', 'undefine', name],
-        ['rm', os.path.join(IMAGES_PATH, f'{name}.img')],
-        ['rm', os.path.join(ISO_PATH, f'{name}.iso')],
+        ['rm', os.path.join(config.images_path, f'{name}.img')],
+        ['rm', os.path.join(config.iso_path, f'{name}.iso')],
         ['ssh-keygen', '-f', '/root/.ssh/known_hosts', '-R', f'{name}.fredvm']
     ]
     for command in commands:
@@ -43,9 +43,15 @@ def remove(name, confirm=True):
 def remove_vm():
     parser = argparse.ArgumentParser(description="Remove a vm that was created using the boostrap-vm script")
     parser.add_argument('--step', action='store_true', help="one-step-at-a-time: confirm each task before running")
+    parser.add_argument('-c', '--config', help="config file to use")
     parser.add_argument('name', nargs='+', help="the name of the virtual machine you want to remove")
 
     args = vars(parser.parse_args())
 
+    if args['config']:
+        config = Config(args['config'])
+    else:
+        config = Config(default_config_file())
+
     for name in args['name']:
-        remove(name, args['step'])
+        remove(name, config, args['step'])
