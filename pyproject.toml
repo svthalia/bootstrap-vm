@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bootstrap_vm"
-version = "0.1.0"
+version = "0.2.0"
 description = "Bootstrap a VM using libvirt tools"
 authors = ["Jelle Besseling <jelle@pingiun.com>"]
 license = "GPL-3.0-or-later"
