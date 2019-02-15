@@ -152,12 +152,19 @@ def bootstrap_vm():
         args['bridge'] = args['bridge'] or config.static[static].get('bridge')
         args['ip'] = args['ip'] or config.static[static].get('ip')
         args['hostname'] = args['hostname'] or config.static[static].get('hostname') or None
-        args['netplan'] = args['netplan'] or config.static[static].get('netplan') or config.netplan or None
+        args['netplan'] = args['netplan'] or config.static[static].get('netplan') or config.get('netplan') or None
         args['vcpu'] = args['vcpu'] or config.static[static].get('vcpu') or config.vcpu
         args['memory'] = args['memory'] or config.static[static].get('memory') or config.memory
-        args['host_keys'] = args['host_keys'] or config.static[static].get('host_keys') or config.host_keys or None
-        args['public_keys'] = {*(config.static[static].get('public_keys') or []), *(config.public_keys or []),
+        args['host_keys'] = args['host_keys'] or config.static[static].get('host_keys') \
+            or config.get('host_keys') or None
+        args['public_keys'] = {*(config.static[static].get('public_keys') or []), *(config.get('public_keys') or []),
                                *(args['public_keys'] or [])}
+    else:
+        args['netplan'] = args['netplan'] or config.get('netplan') or None
+        args['vcpu'] = args['vcpu'] or config.vcpu
+        args['memory'] = args['memory'] or config.memory
+        args['host_keys'] = args['host_keys'] or config.get('host_keys') or None
+        args['public_keys'] = {*(config.get('public_keys') or []), *(args['public_keys'] or [])}
 
     del args['config']
     vm = VirtualMachine(config=config, **args)
