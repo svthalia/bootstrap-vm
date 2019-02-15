@@ -1,4 +1,4 @@
-# bootstrap-vm
+# bootstrap-vm [![Build Status](https://travis-ci.org/thaliawww/bootstrap-vm.svg?branch=master)](https://travis-ci.org/thaliawww/bootstrap-vm)
 
 Bootstrap a VM using libvirt tools
 
