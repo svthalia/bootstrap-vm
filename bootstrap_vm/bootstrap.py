@@ -123,7 +123,7 @@ def bootstrap_vm():
     parser.add_argument('--vcpu', type=int, help="amount of VCPUs")
     parser.add_argument('--memory', type=int, help="amount of memory")
     parser.add_argument('--host-keys', help="directory where ssh host-keys can be found for the created VM")
-    parser.add_argument('-k', '--key', action='append',
+    parser.add_argument('-k', '--key', action='append', dest='public_keys',
                         help="add this public key to the authorized_keys on the created VM")
     parser.add_argument('--no-clean', action='store_true', help="do not clean up files and vms when an error occurs")
     parser.add_argument('--no-install', action='store_true',
@@ -157,7 +157,7 @@ def bootstrap_vm():
         args['memory'] = args['memory'] or config.static[static].get('memory') or config.memory
         args['host_keys'] = args['host_keys'] or config.static[static].get('host_keys') or config.host_keys or None
         args['public_keys'] = {*(config.static[static].get('public_keys') or []), *(config.public_keys or []),
-                               *(args['key'] or [])}
+                               *(args['public_keys'] or [])}
 
     del args['config']
     vm = VirtualMachine(config=config, **args)
