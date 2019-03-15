@@ -24,6 +24,7 @@ DEFAULT_CONFIG = {
     'initial_packages': ['qemu-guest-agent', 'python', 'python-apt', 'python-simplejson'],
     'vcpu': 1,
     'memory': 1048576,
+    'disk': '2G',
     'domain': 'test',
     'base_path': '/var/lib/libvirt/',
     'iso_path': '/var/lib/libvirt/iso',
