@@ -170,6 +170,7 @@ def bootstrap_vm():
         args['netplan'] = args['netplan'] or config.get('netplan') or None
         args['vcpu'] = args['vcpu'] or config.vcpu
         args['memory'] = args['memory'] or config.memory
+        args['disk'] = args['disk'] or config.disk
         args['host_keys'] = args['host_keys'] or config.get('host_keys') or None
         args['public_keys'] = {*(config.get('public_keys') or []), *(args['public_keys'] or [])}
 
