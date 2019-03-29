@@ -50,6 +50,11 @@ def bootstrap(vm, args):
 
     if not args['run']:
         copyfile(vm.image_location, vm.disk_location)
+        if args['disk'] != '2G':
+            subprocess.run(['qemu-img',
+                            'resize',
+                            vm.disk_location,
+                            args['disk']])
 
     vm.generate_iso()
 
@@ -122,6 +127,7 @@ def bootstrap_vm():
     parser.add_argument('--netplan', help="netplan config to use")
     parser.add_argument('--vcpu', type=int, help="amount of VCPUs")
     parser.add_argument('--memory', type=int, help="amount of memory")
+    parser.add_argument('--disk', help="disk size (use format that qemu-img understands)")
     parser.add_argument('--host-keys', help="directory where ssh host-keys can be found for the created VM")
     parser.add_argument('-k', '--key', action='append', dest='public_keys',
                         help="add this public key to the authorized_keys on the created VM")
@@ -155,6 +161,7 @@ def bootstrap_vm():
         args['netplan'] = args['netplan'] or config.static[static].get('netplan') or config.get('netplan') or None
         args['vcpu'] = args['vcpu'] or config.static[static].get('vcpu') or config.vcpu
         args['memory'] = args['memory'] or config.static[static].get('memory') or config.memory
+        args['disk'] = args['disk'] or config.static[static].get('disk') or config.disk
         args['host_keys'] = args['host_keys'] or config.static[static].get('host_keys') \
             or config.get('host_keys') or None
         args['public_keys'] = {*(config.static[static].get('public_keys') or []), *(config.get('public_keys') or []),
