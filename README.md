@@ -30,5 +30,5 @@ verification of the image will fail.
 Now you can install the script using pip:
 
 ```bash
-sudo pip install https://github.com/thaliawww/bootstrap-vm
+sudo -H pip install git+https://github.com/thaliawww/bootstrap-vm
 ```
