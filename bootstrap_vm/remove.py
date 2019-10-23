@@ -24,34 +24,42 @@ from bootstrap_vm.file_utils import absent
 
 def remove(name, config, confirm=True):
     commands = [
-        ['virsh', 'destroy', name],
-        ['virsh', 'undefine', name],
-        ['rm', os.path.join(config.images_path, f'{name}.img')],
-        ['rm', os.path.join(config.iso_path, f'{name}.iso')],
-        ['ssh-keygen', '-f', '/root/.ssh/known_hosts', '-R', f'{name}.fredvm']
+        ["virsh", "destroy", name],
+        ["virsh", "undefine", name],
+        ["rm", os.path.join(config.images_path, f"{name}.img")],
+        ["rm", os.path.join(config.iso_path, f"{name}.iso")],
+        ["ssh-keygen", "-f", "/root/.ssh/known_hosts", "-R", f"{name}.fredvm"],
     ]
     for command in commands:
-        print(' '.join(command))
-        if not confirm or input("Do you want to run this? [Y/n] ").lower() != 'n':
+        print(" ".join(command))
+        if not confirm or input("Do you want to run this? [Y/n] ").lower() != "n":
             subprocess.run(command)
 
     print("Removing ip from /etc/hosts")
-    if not confirm or input("Do you want to run this? [Y/n] ").lower() != 'n':
-        absent('/etc/hosts', name + '.fredvm$')
+    if not confirm or input("Do you want to run this? [Y/n] ").lower() != "n":
+        absent("/etc/hosts", name + ".fredvm$")
 
 
 def remove_vm():
-    parser = argparse.ArgumentParser(description="Remove a vm that was created using the boostrap-vm script")
-    parser.add_argument('--step', action='store_true', help="one-step-at-a-time: confirm each task before running")
-    parser.add_argument('-c', '--config', help="config file to use")
-    parser.add_argument('name', nargs='+', help="the name of the virtual machine you want to remove")
+    parser = argparse.ArgumentParser(
+        description="Remove a vm that was created using the boostrap-vm script"
+    )
+    parser.add_argument(
+        "--step",
+        action="store_true",
+        help="one-step-at-a-time: confirm each task before running",
+    )
+    parser.add_argument("-c", "--config", help="config file to use")
+    parser.add_argument(
+        "name", nargs="+", help="the name of the virtual machine you want to remove"
+    )
 
     args = vars(parser.parse_args())
 
-    if args['config']:
-        config = Config(args['config'])
+    if args["config"]:
+        config = Config(args["config"])
     else:
         config = Config(default_config_file())
 
-    for name in args['name']:
-        remove(name, config, args['step'])
+    for name in args["name"]:
+        remove(name, config, args["step"])

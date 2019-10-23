@@ -27,13 +27,13 @@ def main():
         sys.exit(1)
 
     filename = os.path.basename(sys.argv[0])
-    if filename == 'bootstrap-vm':
+    if filename == "bootstrap-vm":
         bootstrap_vm()
-    elif filename == 'remove-vm':
+    elif filename == "remove-vm":
         remove_vm()
     else:
         print("Filename should be bootstrap-vm or remove-vm", file=sys.stderr)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
