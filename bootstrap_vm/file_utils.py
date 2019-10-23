@@ -22,35 +22,35 @@ import re
 # Adapted from ansible sources:
 # https://github.com/ansible/ansible/blob/30227ace9818655f1ef8306c459664d0f160fee2/lib/ansible/modules/files/lineinfile.py
 def write_changes(b_lines, dest):
-    with open(dest, 'wb') as f:
+    with open(dest, "wb") as f:
         f.writelines(b_lines)
 
 
 # Adapted from ansible sources:
 # https://github.com/ansible/ansible/blob/30227ace9818655f1ef8306c459664d0f160fee2/lib/ansible/modules/files/lineinfile.py
 def present(dest, regexp, line):
-    b_dest = bytes(dest, encoding='utf-8')
+    b_dest = bytes(dest, encoding="utf-8")
 
-    with open(b_dest, 'rb') as f:
+    with open(b_dest, "rb") as f:
         b_lines = f.readlines()
 
     if regexp is not None:
-        bre_m = re.compile(bytes(regexp, encoding='utf-8'))
+        bre_m = re.compile(bytes(regexp, encoding="utf-8"))
 
     # index[0] is the line num where regexp has been found
     # index[1] is the line num where insertafter/inserbefore has been found
     index = [-1, -1]
-    b_line = bytes(line, encoding='utf-8')
+    b_line = bytes(line, encoding="utf-8")
     for lineno, b_cur_line in enumerate(b_lines):
         if regexp is not None:
             match_found = bre_m.search(b_cur_line)
         else:
-            match_found = b_line == b_cur_line.rstrip(b'\r\n')
+            match_found = b_line == b_cur_line.rstrip(b"\r\n")
         if match_found:
             index[0] = lineno
 
     changed = False
-    b_linesep = bytes(os.linesep, encoding='utf-8')
+    b_linesep = bytes(os.linesep, encoding="utf-8")
     # Exact line or Regexp matched a line in the file
     if index[0] != -1:
         b_new_line = b_line
@@ -66,7 +66,7 @@ def present(dest, regexp, line):
     elif index[1] == -1:
 
         # If the file is not empty then ensure there's a newline before the added line
-        if b_lines and not b_lines[-1][-1:] in (b'\n', b'\r'):
+        if b_lines and not b_lines[-1][-1:] in (b"\n", b"\r"):
             b_lines.append(b_linesep)
 
         b_lines.append(b_line + b_linesep)
@@ -78,23 +78,23 @@ def present(dest, regexp, line):
 
 # Adapted from ansible sources:
 # https://github.com/ansible/ansible/blob/30227ace9818655f1ef8306c459664d0f160fee2/lib/ansible/modules/files/lineinfile.py
-def absent(dest, regexp, line=''):
-    b_dest = bytes(dest, encoding='utf-8')
+def absent(dest, regexp, line=""):
+    b_dest = bytes(dest, encoding="utf-8")
 
-    with open(b_dest, 'rb') as f:
+    with open(b_dest, "rb") as f:
         b_lines = f.readlines()
 
     if regexp is not None:
-        bre_c = re.compile(bytes(regexp, encoding='utf-8'))
+        bre_c = re.compile(bytes(regexp, encoding="utf-8"))
     found = []
 
-    b_line = bytes(line, encoding='utf-8')
+    b_line = bytes(line, encoding="utf-8")
 
     def matcher(b_cur_line):
         if regexp is not None:
             match_found = bre_c.search(b_cur_line)
         else:
-            match_found = b_line == b_cur_line.rstrip(b'\r\n')
+            match_found = b_line == b_cur_line.rstrip(b"\r\n")
         if match_found:
             found.append(b_cur_line)
         return not match_found

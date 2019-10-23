@@ -21,14 +21,19 @@ import yaml
 from bootstrap_vm.constants import APP_NAME
 
 DEFAULT_CONFIG = {
-    'initial_packages': ['qemu-guest-agent', 'python', 'python-apt', 'python-simplejson'],
-    'vcpu': 1,
-    'memory': 1048576,
-    'disk': '2G',
-    'domain': 'test',
-    'base_path': '/var/lib/libvirt/',
-    'iso_path': '/var/lib/libvirt/iso',
-    'images_path': '/var/lib/libvirt/images',
+    "initial_packages": [
+        "qemu-guest-agent",
+        "python",
+        "python-apt",
+        "python-simplejson",
+    ],
+    "vcpu": 1,
+    "memory": 1048576,
+    "disk": "2G",
+    "domain": "test",
+    "base_path": "/var/lib/libvirt/",
+    "iso_path": "/var/lib/libvirt/iso",
+    "images_path": "/var/lib/libvirt/images",
 }
 
 
@@ -78,4 +83,4 @@ def get_site_config(appname):
 
 
 def default_config_file():
-    return os.path.join(get_site_config(APP_NAME), 'config.yaml')
+    return os.path.join(get_site_config(APP_NAME), "config.yaml")

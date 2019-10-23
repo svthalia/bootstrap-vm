@@ -14,7 +14,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-APP_NAME = 'bootstrap-vm'
+APP_NAME = "bootstrap-vm"
 ONE_DAY = 60 * 60 * 24
 
 VM_XML = """
